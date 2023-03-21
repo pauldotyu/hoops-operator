@@ -18,6 +18,12 @@ package controllers
 
 import (
 	"context"
+	"io/ioutil"
+	"net/http"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,9 +53,64 @@ type StandingsReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *StandingsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	// get the standings object
+	standings := &hoopsv1alpha1.Standings{}
+	if err := r.Get(ctx, req.NamespacedName, standings); err != nil {
+		log.Error(err, "unable to fetch Standings")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// create a http client
+	http := &http.Client{}
+
+	// get the data from standings.Spec.DataSourceUrl
+	resp, err := http.Get(standings.Spec.DataSourceUrl)
+	if err != nil {
+		log.Error(err, "unable to fetch data from standings.Spec.DataSourceUrl")
+		return ctrl.Result{}, err
+	}
+	defer resp.Body.Close()
+
+	// read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err, "unable to read response body")
+		return ctrl.Result{}, err
+	}
+
+	// convert body to string
+	bodyString := string(body)
+
+	// create or update configmap
+	configMap := &corev1.ConfigMap{}
+	if err := r.Get(ctx, req.NamespacedName, configMap); err != nil {
+		if errors.IsNotFound(err) {
+			configMap = &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      standings.Spec.ConfigMapName,
+					Namespace: standings.Namespace,
+				},
+				Data: map[string]string{
+					standings.Spec.ConfigMapKey: bodyString,
+				},
+			}
+			if err := r.Create(ctx, configMap); err != nil {
+				log.Error(err, "unable to create ConfigMap")
+				return ctrl.Result{}, err
+			}
+		} else {
+			log.Error(err, "unable to fetch ConfigMap")
+			return ctrl.Result{}, err
+		}
+	} else {
+		configMap.Data["standings"] = bodyString
+		if err := r.Update(ctx, configMap); err != nil {
+			log.Error(err, "unable to update ConfigMap")
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }

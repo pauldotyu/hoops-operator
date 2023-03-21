@@ -35,9 +35,16 @@ spec:
           spec:
             description: StandingsSpec defines the desired state of Standings
             properties:
-              foo:
-                description: Foo is an example field of Standings. Edit standings_types.go
-                  to remove/update
+              configMapKey:
+                description: ConfigMapKey is the key of the ConfigMap to store the
+                  standings
+                type: string
+              configMapName:
+                description: ConfigMapName is the name of the ConfigMap to store the
+                  standings
+                type: string
+              dataSourceUrl:
+                description: DataSourceUrl is the URL of the data source
                 type: string
             type: object
           status:
