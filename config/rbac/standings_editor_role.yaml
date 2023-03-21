@@ -1,0 +1,31 @@
+# permissions for end users to edit standings.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: standings-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: hoops-operator
+    app.kubernetes.io/part-of: hoops-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: standings-editor-role
+rules:
+- apiGroups:
+  - hoops.paulyu.dev
+  resources:
+  - standings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - hoops.paulyu.dev
+  resources:
+  - standings/status
+  verbs:
+  - get

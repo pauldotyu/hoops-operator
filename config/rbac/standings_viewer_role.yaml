@@ -1,0 +1,27 @@
+# permissions for end users to view standings.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: standings-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: hoops-operator
+    app.kubernetes.io/part-of: hoops-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: standings-viewer-role
+rules:
+- apiGroups:
+  - hoops.paulyu.dev
+  resources:
+  - standings
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - hoops.paulyu.dev
+  resources:
+  - standings/status
+  verbs:
+  - get

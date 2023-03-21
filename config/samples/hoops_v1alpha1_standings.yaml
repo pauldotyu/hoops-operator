@@ -1,0 +1,14 @@
+apiVersion: hoops.paulyu.dev/v1alpha1
+kind: Standings
+metadata:
+  labels:
+    app.kubernetes.io/name: standings
+    app.kubernetes.io/instance: standings-sample
+    app.kubernetes.io/part-of: hoops-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: hoops-operator
+  name: standings-sample
+spec:
+  dataSourceUrl: "https://global.nba.com/statsm2/season/conferencestanding.json?locale=en"
+  configMapName: "standings"
+  configMapKey: "standings.json"
