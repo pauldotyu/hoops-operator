@@ -1,0 +1,24 @@
+name: Container Image CI
+on:  
+  push:
+    tags:
+    - 'v*'
+
+permissions:
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        username: ${{ github.repository_owner }}
+        password: ${{ github.token }}
+        registry: ghcr.io
+    - name: Build the container image
+      run: make docker-buildx IMG=hoops-operator:${{ github.ref_name }}
+    - name: Push the container image
+      run: make docker-push IMG=hoops-operator:${{ github.ref_name }}
